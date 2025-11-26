@@ -5,15 +5,15 @@ import Testimonial from "@/components/Testimonial";
 import WhyChooseUs from "@/components/WhyChooseUs";
 
 
+
 export default function Home() {
   return (
    <div>
     <Hero></Hero>
     <HowItWorks></HowItWorks>
-    <Pricings></Pricings>
     <WhyChooseUs></WhyChooseUs>
-    <Testimonial></Testimonial>
-    
+    <Pricings></Pricings>
+    <Testimonial></Testimonial> 
     
    </div>
   );
