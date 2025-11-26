@@ -95,12 +95,12 @@ const Footer: React.FC = () => {
           </p>
           <ul className="flex space-x-4 text-sm sm:text-base md:text-base lg:text-lg">
             <li>
-              <a href="#" className="text-black hover:text-primary transition-colors">
+              <a href="#" className="text-black hover:text-white transition-colors">
                 Privacy Policy
               </a>
             </li>
             <li>
-              <a href="#" className="text-black hover:text-primary transition-colors">
+              <a href="#" className="text-black hover:text-white transition-colors">
                 Terms & Conditions
               </a>
             </li>
