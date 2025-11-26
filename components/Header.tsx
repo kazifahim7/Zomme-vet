@@ -23,7 +23,7 @@ const Header: React.FC = () => {
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
-                    <Link href="#">
+                    <Link href="/">
                       <img
                            src="https://i.postimg.cc/GtqPWQt4/image-2483.png"
                            alt="Zoomie Vet"
@@ -35,7 +35,7 @@ const Header: React.FC = () => {
 
                 {/* Desktop Menu */}
                 <nav className="hidden md:flex items-center space-x-8">
-                    <a href="#" className="text-gray-600 hover:text-primary transition-colors">Home</a>
+                    <Link href="/" className="text-gray-600 hover:text-primary transition-colors">Home</Link>
                     <a href="#services" className="text-gray-600 hover:text-primary transition-colors">Services</a>
                     <a href="#pricing" className="text-gray-600 hover:text-primary transition-colors">Pricing</a>
                     <a href="#about" className="text-gray-600 hover:text-primary transition-colors">About</a>
