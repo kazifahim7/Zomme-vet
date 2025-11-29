@@ -40,6 +40,8 @@ const Header: React.FC = () => {
                     <Link href="/#pricing" className="text-gray-600 hover:text-primary transition-colors">Pricing</Link>
                     <Link href="/#about" className="text-gray-600 hover:text-primary transition-colors">About</Link>
                     <Link href="/#contact" className="text-gray-600 hover:text-primary transition-colors">Contact</Link>
+                    <Link href="/" className="text-gray-600 hover:text-primary transition-colors">Home</Link>
+              
                 </nav>
 
                 {/* Desktop User/Profile */}
