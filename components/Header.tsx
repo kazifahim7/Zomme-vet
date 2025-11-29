@@ -12,34 +12,34 @@ const Header: React.FC = () => {
         const accessToken = localStorage.getItem("accessToken");
         const idToken = localStorage.getItem("idToken");
         if (accessToken && idToken) {
-            setUser(true);
+            // Defer state update to avoid synchronous setState in effect
+            setTimeout(() => setUser(true), 0);
         }
     }, []);
 
     const closeMenu = () => setMenuOpen(false);
 
     return (
-        <header className="bg-white shadow-sm sticky top-0 z-50">
+        <header className="bg-white shadow-sm sticky top-0 z-30">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
-                    <Link href="#">
+                    <Link href="/">
                       <img
                            src="https://i.postimg.cc/GtqPWQt4/image-2483.png"
                            alt="Zoomie Vet"
                            style={{ width: '82px', height: '74px', opacity: 1 }}
                         />
-
                     </Link>
                 </div>
 
                 {/* Desktop Menu */}
                 <nav className="hidden md:flex items-center space-x-8">
-                    <a href="#" className="text-gray-600 hover:text-primary transition-colors">Home</a>
-                    <a href="#services" className="text-gray-600 hover:text-primary transition-colors">Services</a>
-                    <a href="#pricing" className="text-gray-600 hover:text-primary transition-colors">Pricing</a>
-                    <a href="#about" className="text-gray-600 hover:text-primary transition-colors">About</a>
-                    <a href="#footer" className="text-gray-600 hover:text-primary transition-colors">Contact</a>
+                    <Link href="/#home" className="text-gray-600 hover:text-primary transition-colors">Home</Link>
+                    <Link href="/#services" className="text-gray-600 hover:text-primary transition-colors">Services</Link>
+                    <Link href="/#pricing" className="text-gray-600 hover:text-primary transition-colors">Pricing</Link>
+                    <Link href="/#about" className="text-gray-600 hover:text-primary transition-colors">About</Link>
+                    <Link href="/#contact" className="text-gray-600 hover:text-primary transition-colors">Contact</Link>
                 </nav>
 
                 {/* Desktop User/Profile */}
@@ -48,7 +48,7 @@ const Header: React.FC = () => {
                         <div className="relative group">
                             <CgProfile className="text-2xl cursor-pointer text-black" />
                             <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <Link href="/admin" className="block px-4 py-2 hover:bg-gray-100 text-gray-700">Admin</Link>
+                                <Link href="/dashboard" className="block px-4 py-2 hover:bg-gray-100 text-gray-700">Dashboard</Link>
                                 <button
                                     onClick={() => {
                                         localStorage.removeItem("accessToken");
@@ -102,7 +102,7 @@ const Header: React.FC = () => {
                     {/* Mobile User Section */}
                     {user ? (
                         <>
-                            <Link href="/admin" onClick={closeMenu} className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Admin</Link>
+                            <Link href="/dashboard" onClick={closeMenu} className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Dashboard</Link>
                             <button
                                 onClick={() => {
                                     localStorage.removeItem("accessToken");
