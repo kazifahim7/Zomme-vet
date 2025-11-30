@@ -11,7 +11,7 @@ import {
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   return (
-    <footer id="footer" className="bg-emerald-500 text-black pt-16 pb-8">
+    <footer id="contact" className="bg-emerald-500 text-black pt-16 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Logo Section */}

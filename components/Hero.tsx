@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Hero = () => {
   const loginUrl = `https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URL}`;
@@ -22,11 +23,11 @@ const Hero = () => {
             for your beloved pets.
           </p>
 
-          <a href={loginUrl} target="_blank" rel="noopener noreferrer">
+          <Link href="/" target="_blank" rel="noopener noreferrer">
             <button className="bg-emerald-500 text-white text-lg px-8 py-3 rounded-lg w-full sm:w-auto hover:bg-emerald-600 transition-colors duration-200 cursor-pointer">
               Schedule Your First Visit
             </button>
-          </a>
+          </Link>
         </div>
 
         {/* Image */}
