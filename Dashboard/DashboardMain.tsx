@@ -152,8 +152,8 @@ export default function DashboardMain() {
           {[
             { label: "Book Appointment", emoji: "📅", path: "/book" },
             { label: "My Pets", emoji: "🐾", path: "/pets" },
-            { label: "My Appointments", emoji: "📋", path: "/appointments" },
-            { label: "My Prescriptions", emoji: "💊", path: "/prescritions" },
+            { label: "My Appointments", emoji: "📋", path: "/myappointment" },
+            { label: "My Prescriptions", emoji: "💊", path: "/prescriptions" },
             { label: "Message", emoji: "💬", path: "/message" },
             { label: "Account Settings", emoji: "⚙️", path: "/account" },
           ].map((btn, i) => (
@@ -234,12 +234,13 @@ export default function DashboardMain() {
                       {dayjs(a.date).format("MMM D, YYYY")} • {a.time}
                     </p>
 
-                    <button
+                    <Link
+                      href={`/appointments`}
                       className="text-blue-500 font-medium md:text-base cursor-pointer"
-                      onClick={() => router.push(`/appointments/${a.id}`)}
+                      onClick={() => router.push(`/appointments`)}
                     >
                       View Details
-                    </button>
+                    </Link>
                   </div>
 
                 </div>
