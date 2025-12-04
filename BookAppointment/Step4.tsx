@@ -46,13 +46,13 @@ export default function Step4({
       </div>
 
       <div className="flex justify-between mt-8">
-        <button onClick={onPrevious} className="px-6 py-2 border rounded cursor-pointer">
+        <button onClick={onPrevious} className="px-6 py-2 border border-emerald-500 rounded cursor-pointer text-emerald-500 hover:bg-gray-100 transition ">
           Previous
         </button>
 
         <button
           onClick={onConfirm}
-          className="px-6 py-2 bg-emerald-500 text-white rounded cursor-pointer"
+          className="px-6 py-2 bg-emerald-500 text-white rounded cursor-pointer hover:bg-emerald-700 transition "
         >
           Confirm Booking
         </button>

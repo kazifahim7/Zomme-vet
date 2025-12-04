@@ -1,7 +1,7 @@
 "use client";
+import Image from "next/image";
 import React from "react";
 import {
-  FaPaw,
   FaInstagram,
   FaFacebook,
   FaLinkedin,
@@ -13,14 +13,16 @@ const Footer: React.FC = () => {
   return (
     <footer id="contact" className="bg-emerald-500 text-black pt-16 pb-8">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12 items-start">
           {/* Logo Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2">
-              <img
+              <Image
                 src="https://i.postimg.cc/GtqPWQt4/image-2483.png"
                 alt="Zoomie Vet"
-                style={{ width: "131px", height: "118px", opacity: 1 }}
+                width={121}           
+                height={108}          
+                style={{ opacity: 1 }}
               />
             </div>
             <p className="text-black mb-6 text-sm sm:text-base md:text-base lg:text-lg">
@@ -45,7 +47,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Quick Links Section */}
-          <div className="md:ml-12 lg:ml-24">
+          <div className="md:ml-12 lg:ml-24 flex flex-col justify-start">
             <h4 className="text-base sm:text-lg md:text-lg lg:text-xl font-semibold mb-4">
               Quick Links
             </h4>
@@ -69,7 +71,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Company Section */}
-          <div className="md:ml-12 lg:ml-24">
+          <div className="md:ml-12 lg:ml-24 flex flex-col justify-start">
             <h4 className="text-base sm:text-lg md:text-lg lg:text-xl font-semibold mb-4">
               Company
             </h4>
@@ -89,7 +91,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Footer Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-center border-t border-black pt-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-t border-black pt-4">
           <p className="text-black mb-2 md:mb-0 text-sm sm:text-base md:text-base lg:text-lg">
             © ZOOMIE VET {currentYear}. All rights reserved.
           </p>

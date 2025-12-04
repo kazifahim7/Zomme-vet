@@ -17,9 +17,9 @@ export type DateOption = {
 
 export interface AppointmentTime {
   time: string;
-  booked: boolean; // MISSING
-  available: boolean; // PROVIDED
-  timeRange: string; // MISSING
+  booked: boolean; 
+  available: boolean; 
+  timeRange: string; 
 }
 
 
