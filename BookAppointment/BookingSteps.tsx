@@ -60,7 +60,7 @@ export default function BookingSteps({ step }: { step: number }) {
               </span>
 
               {index < steps.length - 1 && (
-                <div className="absolute left-3 top-6 h-16 w-[2px] bg-gray-300"></div>
+                <div className="absolute left-3 top-6 h-16 w-0.5 bg-gray-300"></div>
               )}
             </div>
           ))}

@@ -90,12 +90,12 @@ export default function Step2({
         <button
           onClick={handlePreviousDate}
           disabled={startIndex === 0}
-          className="p-1 text-gray-500 hover:text-gray-800 disabled:text-gray-300"
+          className="p-1 text-wh hover:text-gray-800 disabled:text-gray-300"
         >
           ←
         </button>
 
-        <div className="flex gap-3 overflow-hidden flex-grow">
+        <div className="flex gap-3 overflow-hidden grow">
           {visibleDates.map((d, i) => (
             <button
               key={d.date}
