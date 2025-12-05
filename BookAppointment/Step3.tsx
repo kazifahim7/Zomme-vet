@@ -31,7 +31,7 @@ export default function Step3({
       <select
         value={reason}
         onChange={(e) => onReason(e.target.value as Reason)}
-        className="w-full border rounded p-2 mb-6"
+        className="w-full border border-gray-200 rounded p-2 mb-6"
       >
         <option value="">Select Reason</option>
         {reasons.map((r) => (
@@ -45,19 +45,19 @@ export default function Step3({
       <textarea
         value={description}
         onChange={(e) => onDescription(e.target.value)}
-        className="w-full border rounded p-3 h-32 mb-6"
+        className="w-full border border-gray-200 rounded p-3 h-32 mb-6"
         placeholder="Describe symptoms..."
       />
 
       <div className="flex justify-between">
-        <button onClick={onPrevious} className="px-6 py-2 border rounded cursor-pointer">
+        <button onClick={onPrevious} className="px-6 py-2 border border-emerald-500 rounded cursor-pointer text-emerald-500 hover:bg-gray-100 transition ">
           Previous
         </button>
 
         <button
           onClick={onNext}
           disabled={!reason}
-          className="px-6 py-2 bg-emerald-500 text-white rounded disabled:bg-gray-300 cursor-pointer"
+          className="px-6 py-2 bg-emerald-500 text-white rounded disabled:bg-gray-300 hover:bg-emerald-700 transition cursor-pointer "
         >
           Continue
         </button>

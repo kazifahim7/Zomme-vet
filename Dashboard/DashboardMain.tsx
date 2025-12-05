@@ -6,8 +6,12 @@ import dayjs from "dayjs";
 import { FaPaw, FaCalendarAlt, FaClipboardCheck } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
+<<<<<<< HEAD
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
+=======
+import Image from "next/image";
+>>>>>>> fe0747bce1bd45a6e30d1cc66f032932e83d8f30
 
 interface User {
   createdAt: string;
@@ -166,17 +170,17 @@ export default function DashboardMain() {
       </div>
 
       {/* MAIN FLEX */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 ">
 
         {/* QUICK ACTIONS */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px]">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px] ">
           <h2 className="text-lg md:text-xl font-semibold mb-2">Quick Actions</h2>
           {[
             { label: "Book Appointment", emoji: "📅", path: "/book" },
             { label: "My Pets", emoji: "🐾", path: "/pets" },
             { label: "My Appointments", emoji: "📋", path: "/myappointment" },
             { label: "My Prescriptions", emoji: "💊", path: "/prescriptions" },
-            { label: "Message", emoji: "💬", path: "/message" },
+            { label: "Message", emoji: "💬", path: "/subscription" },
             { label: "Account Settings", emoji: "⚙️", path: "/account" },
           ].map((btn, i) => (
             <button
@@ -293,10 +297,17 @@ export default function DashboardMain() {
                 className="bg-white p-4 md:p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3">
+<<<<<<< HEAD
                   <img
                     src={p.profileImageUrl || "/placeholder-pet.png"}
+=======
+                  <Image
+                    src={p.photo || "/placeholder-pet.png"}  // Image source with fallback
+>>>>>>> fe0747bce1bd45a6e30d1cc66f032932e83d8f30
                     alt={p.name}
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover"
+                    width={64}       // w-16 = 64px
+                    height={64}      // h-16 = 64px
+                    className="rounded-full object-cover"
                   />
                   <div>
                     <p className="font-semibold text-lg">{p.name}</p>

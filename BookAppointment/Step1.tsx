@@ -29,6 +29,7 @@ export default function Step1({
             <div className="text-4xl">{pet.image}</div>
             <h3 className="font-semibold">{pet.name}</h3>
             <p className="text-xs text-gray-500">{pet.breed}</p>
+            <button className="text-sm text-blue-500">{pet.years} years {pet.months} months</button>
           </div>
         ))}
       </div>
