@@ -8,13 +8,13 @@ import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
-import Image from "next/image";
 
 interface User {
   createdAt: string;
   name: ReactNode;
   firstName: string;
   email: string;
+  userId: string;
 }
 
 interface Appointment {
@@ -38,6 +38,26 @@ interface Pet {
   isActive: boolean;
 }
 
+interface DashboardData {
+  appointments: {
+    items: Appointment[];
+    recent: number;
+    upcoming: number;
+  };
+  pets: {
+    count: number;
+    items: Pet[];
+  };
+  summary: {
+    hasActiveSubscription: boolean | null;
+    recentAppointments: number;
+    subscriptionStatus: string | null;
+    totalPets: number;
+    upcomingAppointments: number;
+  };
+  user: User;
+}
+
 export default function DashboardMain() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -47,80 +67,99 @@ export default function DashboardMain() {
   const [summary, setSummary] = useState<{
     totalPets: number;
     upcomingAppointments: number;
+    recentAppointments: number;
     totalSpent: number;
     totalAppointments: number;
     cancelledAppointments: number;
     completedAppointments: number;
-    hasActiveSubscription: boolean;
+    hasActiveSubscription: boolean | null;
+    subscriptionStatus: string | null;
   } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeDashboard = async () => {
-      const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-      if (!accessToken) return router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
+      try {
+        setLoading(true);
+        setError(null);
 
-      const token = localStorage.getItem("idToken");
-      if (!token) return router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
+        // Check for tokens
+        const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+        const token = localStorage.getItem("idToken");
 
-      // get user ->
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-        method: "GET",
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        if (!accessToken || !token) {
+          router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
+          return;
         }
-      });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('idToken');
-          localStorage.removeItem('accessToken');
-          window.location.href = 'https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback';
+        // Get dashboard data
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/dashboard`, {
+          method: "GET",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('idToken');
+            localStorage.removeItem('accessToken');
+            window.location.href = 'https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback';
+            return;
+          }
+          throw new Error(`API request failed with status: ${response.status}`);
         }
-        throw new Error('API request failed');
-      }
-      const data = await response.json();
 
-      if (data.user) {
-        console.log(data.user);
-        setUser(data.user);
-      }
+        const dashboardData: DashboardData = await response.json();
+        console.log("Dashboard data:", dashboardData);
 
-      const response1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/dashboard`, {
-        method: "GET",
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        // Set user data
+        if (dashboardData.user) {
+          setUser(dashboardData.user);
         }
-      });
 
-      const data2 = await response1.json();
-      if (data2) {
-        setAppointments(data2.upcomingAppointments || []);
-        setSummary(data2.summary);
-        console.log(data2, "here is dashboard data");
+        // Set appointments - fix: check if appointments exists and has items
+        if (dashboardData.appointments && dashboardData.appointments.items) {
+          setAppointments(dashboardData.appointments.items);
+        } else {
+          setAppointments([]);
+        }
 
-        // Map API pets to match our interface
-        const mappedPets = (data2.pets.items || []).map((pet: any) => ({
-          petId: pet.petId,
-          name: pet.name,
-          species: pet.species,
-          breed: pet.breed,
-          age: pet.age,
-          color: pet.color,
-          weight: pet.weight,
-          profileImageUrl: pet.profileImageUrl,
-          isActive: pet.isActive
-        }));
+        // Set summary data
+        if (dashboardData.summary) {
+          setSummary({
+            totalPets: dashboardData.summary.totalPets || 0,
+            upcomingAppointments: dashboardData.summary.upcomingAppointments || 0,
+            recentAppointments: dashboardData.summary.recentAppointments || 0,
+            totalSpent: 0, // Not in your API response
+            totalAppointments: 0, // Not in your API response
+            cancelledAppointments: 0, // Not in your API response
+            completedAppointments: 0, // Not in your API response
+            hasActiveSubscription: dashboardData.summary.hasActiveSubscription,
+            subscriptionStatus: dashboardData.summary.subscriptionStatus
+          });
+        }
 
-        setPets(mappedPets);
+        // Set pets data - fix: check if pets exists and has items
+        if (dashboardData.pets && dashboardData.pets.items) {
+          setPets(dashboardData.pets.items);
+        } else {
+          setPets([]);
+        }
+
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeDashboard();
   }, [router]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -132,7 +171,40 @@ export default function DashboardMain() {
     );
   }
 
-  if (!user) return null;
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-xl">⚠️</div>
+          <p className="mt-4 text-gray-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user data, show empty state
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gray-700">No user data found. Please login again.</p>
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -144,7 +216,7 @@ export default function DashboardMain() {
     }
   };
 
-  // Format age display - handle negative or unknown ages
+  // Format age display
   const formatAge = (age: number): string => {
     if (age < 0) return "Age unknown";
     if (age === 0) return "Less than 1 year";
@@ -162,15 +234,19 @@ export default function DashboardMain() {
 
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user?.name ? user?.name : user.email}!</h1>
-        <p className="text-gray-500 text-sm md:text-base">{dayjs(user.createdAt).utc().format("dddd, MMMM D, YYYY")}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Welcome back, {user?.name || user?.email}!
+        </h1>
+        <p className="text-gray-500 text-sm md:text-base">
+          {dayjs(user.createdAt).utc().format("dddd, MMMM D, YYYY")}
+        </p>
       </div>
 
       {/* MAIN FLEX */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 ">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
 
         {/* QUICK ACTIONS */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px] ">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px]">
           <h2 className="text-lg md:text-xl font-semibold mb-2">Quick Actions</h2>
           {[
             { label: "Book Appointment", emoji: "📅", path: "/book" },
@@ -207,15 +283,15 @@ export default function DashboardMain() {
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaCalendarAlt className="text-3xl text-green-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{summary?.completedAppointments || 0}</p>
-                <p className="text-gray-500 text-sm">Complete Appointments</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.recentAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Recent Appointments</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaClipboardCheck className="text-3xl text-red-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{summary?.totalAppointments || 0}</p>
-                <p className="text-gray-500 text-sm">Total Appointments</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.upcomingAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Upcoming Appointments</p>
               </div>
             </div>
           </div>
@@ -232,21 +308,20 @@ export default function DashboardMain() {
                   key={a.id}
                   className="bg-white p-4 rounded-xl shadow-md flex flex-col justify-between"
                 >
-                  {/* TOP: Info + Join Video on Right */}
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-lg font-semibold">{a.petName}</p>
                       <p className="text-gray-500 text-sm line-clamp-1">{a.reason}</p>
-
                       <span
                         className={`inline-block mt-2 px-2 py-1 text-xs font-medium rounded ${getStatusColor(a.status)}`}
                       >
                         {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
                       </span>
                     </div>
-
-                    <button className="text-red-500 font-medium md:text-base cursor-pointer"
-                      onClick={() => alert("Joining video call...")}>
+                    <button
+                      className="text-red-500 font-medium md:text-base cursor-pointer hover:text-red-700"
+                      onClick={() => alert("Joining video call...")}
+                    >
                       Join Video
                     </button>
                   </div>
@@ -255,14 +330,12 @@ export default function DashboardMain() {
                     <p className="text-gray-500 text-sm font-medium">
                       {dayjs(a.date).format("MMM D, YYYY")} • {a.time}
                     </p>
-
-                    <Link
-                      href={`/appointments`}
-                      className="text-blue-500 font-medium md:text-base cursor-pointer"
+                    <button
                       onClick={() => router.push(`/appointments`)}
+                      className="text-blue-500 font-medium md:text-base cursor-pointer hover:text-blue-700"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -294,13 +367,17 @@ export default function DashboardMain() {
                 className="bg-white p-4 md:p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3">
-                  <img
-                    src={p.profileImageUrl || "/placeholder-pet.png"}
-                    alt={p.name}
-                    width={64}       // w-16 = 64px
-                    height={64}      // h-16 = 64px
-                    className="rounded-full object-cover"
-                  />
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    {p.profileImageUrl ? (
+                      <img
+                        src={p.profileImageUrl}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-500 text-2xl">🐾</span>
+                    )}
+                  </div>
                   <div>
                     <p className="font-semibold text-lg">{p.name}</p>
                     <p className="text-gray-500 text-sm">{p.species} • {p.breed}</p>
@@ -313,12 +390,12 @@ export default function DashboardMain() {
                 <p className="mt-2 text-sm font-medium text-gray-600">
                   Color: {p.color || "Unknown"}
                 </p>
-                <button
+                {/* <button
                   className="mt-4 w-full text-blue-600 bg-[#F5F9FF] py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base cursor-pointer"
                   onClick={() => router.push(`/pets/${p.petId}`)}
                 >
                   View Details
-                </button>
+                </button> */}
               </div>
             ))}
           </div>
