@@ -6,12 +6,9 @@ import dayjs from "dayjs";
 import { FaPaw, FaCalendarAlt, FaClipboardCheck } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
-<<<<<<< HEAD
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
-=======
 import Image from "next/image";
->>>>>>> fe0747bce1bd45a6e30d1cc66f032932e83d8f30
 
 interface User {
   createdAt: string;
@@ -297,13 +294,8 @@ export default function DashboardMain() {
                 className="bg-white p-4 md:p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3">
-<<<<<<< HEAD
                   <img
                     src={p.profileImageUrl || "/placeholder-pet.png"}
-=======
-                  <Image
-                    src={p.photo || "/placeholder-pet.png"}  // Image source with fallback
->>>>>>> fe0747bce1bd45a6e30d1cc66f032932e83d8f30
                     alt={p.name}
                     width={64}       // w-16 = 64px
                     height={64}      // h-16 = 64px
