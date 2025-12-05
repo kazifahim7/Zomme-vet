@@ -1,18 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { FaPaw, FaCalendarAlt, FaClipboardCheck } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 
 interface User {
+  createdAt: string;
+  name: ReactNode;
   firstName: string;
-  stats: {
-    totalPets: number;
-    upcomingAppointments: number;
-    pastConsultations: number;
-  };
+  email: string;
 }
 
 interface Appointment {
@@ -25,15 +26,15 @@ interface Appointment {
 }
 
 interface Pet {
-  id: string;
+  petId: string;
   name: string;
   species: string;
   breed: string;
   age: number;
-  condition: string;
-  description: string;
+  color: string;
   weight?: number;
-  photo?: string;
+  profileImageUrl?: string;
+  isActive: boolean;
 }
 
 export default function DashboardMain() {
@@ -42,69 +43,77 @@ export default function DashboardMain() {
   const [user, setUser] = useState<User | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
-
-  // Demo data
-  const demoAppointments: Appointment[] = [
-    { id: "1", petName: "Buddy", date: "2025-12-30", time: "10:00 AM", reason: "Regular checkup", status: "scheduled" },
-    { id: "2", petName: "Mittens", date: "2025-12-31", time: "2:00 PM", reason: "Vaccination", status: "confirmed" },
-    { id: "3", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "scheduled" },
-    { id: "4", petName: "Charlie", date: "2025-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "completed" },
-    { id: "5", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "cancelled" },
-    { id: "6", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "scheduled" },
-  ];
+  const [summary, setSummary] = useState<{
+    totalPets: number;
+    upcomingAppointments: number;
+    totalSpent: number;
+    totalAppointments: number;
+    cancelledAppointments: number;
+    completedAppointments: number;
+    hasActiveSubscription: boolean;
+  } | null>(null);
 
   useEffect(() => {
-    const initializeDashboard = () => {
+    const initializeDashboard = async () => {
       const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-      if (!accessToken) return router.push("/login");
+      if (!accessToken) return router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
 
-      const storedUser = typeof window !== "undefined" ? localStorage.getItem("zommeUser") : null;
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        setUser({
-          firstName: "John",
-          stats: { totalPets: 23, upcomingAppointments: 3, pastConsultations: 5 },
-        });
+      const token = localStorage.getItem("idToken");
+      if (!token) return router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
+
+      // get user ->
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('idToken');
+          localStorage.removeItem('accessToken');
+          window.location.href = 'https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback';
+        }
+        throw new Error('API request failed');
+      }
+      const data = await response.json();
+
+      if (data.user) {
+        console.log(data.user);
+        setUser(data.user);
       }
 
-      setAppointments(demoAppointments);
-      setPets([
-        {
-          id: "1",
-          name: "Buddy",
-          species: "Dog",
-          breed: "Golden Retriever",
-          age: 3,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 70,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-        {
-          id: "2",
-          name: "Mittens",
-          species: "Cat",
-          breed: "Siamese",
-          age: 2,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 50,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-        {
-          id: "3",
-          name: "Charlie",
-          species: "Cat",
-          breed: "Siamese",
-          age: 2,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 760,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-      ]);
+      const response1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/dashboard`, {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      const data2 = await response1.json();
+      if (data2) {
+        setAppointments(data2.upcomingAppointments || []);
+        setSummary(data2.summary);
+        console.log(data2, "here is dashboard data");
+
+        // Map API pets to match our interface
+        const mappedPets = (data2.pets.items || []).map((pet: any) => ({
+          petId: pet.petId,
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed,
+          age: pet.age,
+          color: pet.color,
+          weight: pet.weight,
+          profileImageUrl: pet.profileImageUrl,
+          isActive: pet.isActive
+        }));
+
+        setPets(mappedPets);
+      }
       setLoading(false);
     };
 
@@ -134,13 +143,26 @@ export default function DashboardMain() {
     }
   };
 
+  // Format age display - handle negative or unknown ages
+  const formatAge = (age: number): string => {
+    if (age < 0) return "Age unknown";
+    if (age === 0) return "Less than 1 year";
+    return `${age} ${age === 1 ? 'yr' : 'yrs'}`;
+  };
+
+  // Format weight display
+  const formatWeight = (weight?: number): string => {
+    if (!weight || weight <= 0) return "Weight unknown";
+    return `${weight} lbs`;
+  };
+
   return (
     <div className="px-4 md:px-8 lg:px-16 py-6 space-y-10">
 
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user.firstName}!</h1>
-        <p className="text-gray-500 text-sm md:text-base">{dayjs().format("dddd, MMMM D, YYYY")}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user?.name ? user?.name : user.email}!</h1>
+        <p className="text-gray-500 text-sm md:text-base">{dayjs(user.createdAt).utc().format("dddd, MMMM D, YYYY")}</p>
       </div>
 
       {/* MAIN FLEX */}
@@ -177,22 +199,22 @@ export default function DashboardMain() {
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaPaw className="text-3xl text-blue-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.totalPets}</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.totalPets || 0}</p>
                 <p className="text-gray-500 text-sm">Total Pets</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaCalendarAlt className="text-3xl text-green-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.upcomingAppointments}</p>
-                <p className="text-gray-500 text-sm">Upcoming Appointments</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.completedAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Complete Appointments</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaClipboardCheck className="text-3xl text-red-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.pastConsultations}</p>
-                <p className="text-gray-500 text-sm">Past Consultations</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.totalAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Total Appointments</p>
               </div>
             </div>
           </div>
@@ -209,7 +231,6 @@ export default function DashboardMain() {
                   key={a.id}
                   className="bg-white p-4 rounded-xl shadow-md flex flex-col justify-between"
                 >
-
                   {/* TOP: Info + Join Video on Right */}
                   <div className="flex justify-between items-start">
                     <div>
@@ -242,12 +263,10 @@ export default function DashboardMain() {
                       View Details
                     </Link>
                   </div>
-
                 </div>
               ))}
             </div>
           </div>
-
         </div>
       </div>
 
@@ -255,7 +274,6 @@ export default function DashboardMain() {
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 sm:gap-0">
           <h2 className="text-xl font-semibold">Your Pets</h2>
-
           <Link
             href="/pets"
             className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm md:text-base cursor-pointer flex items-center gap-2"
@@ -263,20 +281,20 @@ export default function DashboardMain() {
             <span className="text-lg font-bold">+</span>
             Add New Pet
           </Link>
-
         </div>
+
         {pets.length === 0 ? (
           <p className="text-gray-500">No pets yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {pets.map((p) => (
+            {pets.filter(pet => pet.isActive !== false).map((p) => (
               <div
-                key={p.id}
+                key={p.petId}
                 className="bg-white p-4 md:p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3">
                   <img
-                    src={p.photo || "/placeholder-pet.png"}
+                    src={p.profileImageUrl || "/placeholder-pet.png"}
                     alt={p.name}
                     className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover"
                   />
@@ -286,16 +304,15 @@ export default function DashboardMain() {
                   </div>
                 </div>
                 <div className="flex justify-between mt-4 text-sm">
-                  <p className="text-green-600 font-medium">Age: {p.age} yrs</p>
-                  <p className="text-green-600 font-medium">Weight: {p.weight} lbs</p>
+                  <p className="text-green-600 font-medium">{formatAge(p.age)}</p>
+                  <p className="text-green-600 font-medium">{formatWeight(p.weight)}</p>
                 </div>
-                <p className="mt-2 text-sm font-medium">{p.condition}</p>
-                <p className="mt-3 text-gray-600 text-sm">
-                  {p.description || "No description available."}
+                <p className="mt-2 text-sm font-medium text-gray-600">
+                  Color: {p.color || "Unknown"}
                 </p>
                 <button
                   className="mt-4 w-full text-blue-600 bg-[#F5F9FF] py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base cursor-pointer"
-                  onClick={() => router.push(`/pets/${p.id}`)}
+                  onClick={() => router.push(`/pets/${p.petId}`)}
                 >
                   View Details
                 </button>

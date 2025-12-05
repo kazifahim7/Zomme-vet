@@ -65,14 +65,14 @@ const Header: React.FC = () => {
                         </div>
                     ) : (
                         <Link
-                            href={`https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URL}`}
+                                href={`https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URL}`}
                             target="_blank"
                         >
                             <div className="flex items-center space-x-4">
                                 <button className="text-gray-600 hover:text-primary font-medium cursor-pointer">Log in</button>
-                                <button className="w-[130px] h-[50px] rounded-[8px] border border-emerald-500 text-emerald-500 flex items-center justify-center px-4 hover:bg-emerald-500 hover:text-white transition-colors duration-200 cursor-pointer">
+                                {/* <button className="w-[130px] h-[50px] rounded-[8px] border border-emerald-500 text-emerald-500 flex items-center justify-center px-4 hover:bg-emerald-500 hover:text-white transition-colors duration-200 cursor-pointer">
                                     Get Started
-                                </button>
+                                </button> */}
                             </div>
                         </Link>
                     )}
