@@ -100,7 +100,6 @@ export default function DashboardMain() {
             'Content-Type': 'application/json'
           }
         });
-
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('idToken');
