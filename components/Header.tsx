@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from 'next/link';
 import { CgProfile } from "react-icons/cg";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
+import Image from "next/image";
 
 const Header: React.FC = () => {
     const [user, setUser] = useState(false);
@@ -25,10 +26,12 @@ const Header: React.FC = () => {
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
                     <Link href="/">
-                      <img
-                           src="https://i.postimg.cc/GtqPWQt4/image-2483.png"
-                           alt="Zoomie Vet"
-                           style={{ width: '82px', height: '74px', opacity: 1 }}
+                        <Image
+                        src="https://i.postimg.cc/GtqPWQt4/image-2483.png"
+                        alt="Zoomie Vet"
+                        width={82}
+                        height={74}
+                        style={{ opacity: 1 }}
                         />
                     </Link>
                 </div>
@@ -70,7 +73,7 @@ const Header: React.FC = () => {
                         >
                             <div className="flex items-center space-x-4">
                                 <button className="text-gray-600 hover:text-primary font-medium cursor-pointer">Log in</button>
-                                <button className="w-[130px] h-[50px] rounded-[8px] border border-emerald-500 text-emerald-500 flex items-center justify-center px-4 hover:bg-emerald-500 hover:text-white transition-colors duration-200 cursor-pointer">
+                                <button className="w-[130px] h-[50px] rounded-lg border border-emerald-500 text-emerald-500 flex items-center justify-center px-4 hover:bg-emerald-500 hover:text-white transition-colors duration-200 cursor-pointer">
                                     Get Started
                                 </button>
                             </div>
