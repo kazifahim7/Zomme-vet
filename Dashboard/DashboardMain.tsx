@@ -253,7 +253,7 @@ export default function DashboardMain() {
             { label: "My Pets", emoji: "🐾", path: "/pets" },
             { label: "My Appointments", emoji: "📋", path: "/myappointment" },
             { label: "My Prescriptions", emoji: "💊", path: "/prescriptions" },
-            { label: "Message", emoji: "💬", path: "/subscription" },
+            { label: "Subscription", emoji: "💬", path: "/subscription" },
             { label: "Account Settings", emoji: "⚙️", path: "/account" },
           ].map((btn, i) => (
             <button

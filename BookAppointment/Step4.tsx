@@ -1,4 +1,5 @@
 "use client";
+import { ApiPet } from "./Step1";
 import { Pet, DateOption, AppointmentTime, Reason } from "./types";
 
 export default function Step4({
@@ -10,7 +11,7 @@ export default function Step4({
   onPrevious,
   onConfirm,
 }: {
-  selectedPet: Pet | null;
+  selectedPet: ApiPet | null;
   selectedDate: DateOption | null;
   selectedTime: AppointmentTime | null;
   reason: Reason | "";

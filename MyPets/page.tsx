@@ -57,7 +57,7 @@ const updatePet = async (petId: string, updates: any) => {
     // Handle reserved keywords by mapping them
     Object.keys(updates).forEach(key => {
       if (key === 'name') {
-        transformedUpdates['#name'] = updates[key]; // Use expression attribute name
+        transformedUpdates['#name'] = updates[key]; 
       } else {
         transformedUpdates[key] = updates[key];
       }
@@ -132,7 +132,7 @@ export default function PetsPage() {
       setIsLoading(true); // Start loading
       try {
         const result = await getUserPets();
-        console.log(result, "fahimmmmmm")
+       
         // Handle different response structures
         if (Array.isArray(result)) {
           setPets(result);
