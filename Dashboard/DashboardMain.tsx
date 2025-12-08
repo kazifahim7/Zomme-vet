@@ -1,19 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { FaPaw, FaCalendarAlt, FaClipboardCheck } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 import Link from "next/link";
-import Image from "next/image";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 
 interface User {
+  createdAt: string;
+  name: ReactNode;
   firstName: string;
-  stats: {
-    totalPets: number;
-    upcomingAppointments: number;
-    pastConsultations: number;
-  };
+  email: string;
+  userId: string;
 }
 
 interface Appointment {
@@ -26,15 +27,35 @@ interface Appointment {
 }
 
 interface Pet {
-  id: string;
+  petId: string;
   name: string;
   species: string;
   breed: string;
   age: number;
-  condition: string;
-  description: string;
+  color: string;
   weight?: number;
-  photo?: string;
+  profileImageUrl?: string;
+  isActive: boolean;
+}
+
+interface DashboardData {
+  appointments: {
+    items: Appointment[];
+    recent: number;
+    upcoming: number;
+  };
+  pets: {
+    count: number;
+    items: Pet[];
+  };
+  summary: {
+    hasActiveSubscription: boolean | null;
+    recentAppointments: number;
+    subscriptionStatus: string | null;
+    totalPets: number;
+    upcomingAppointments: number;
+  };
+  user: User;
 }
 
 export default function DashboardMain() {
@@ -43,75 +64,102 @@ export default function DashboardMain() {
   const [user, setUser] = useState<User | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
-
-  // Demo data
-  const demoAppointments: Appointment[] = [
-    { id: "1", petName: "Buddy", date: "2025-12-30", time: "10:00 AM", reason: "Regular checkup", status: "scheduled" },
-    { id: "2", petName: "Mittens", date: "2025-12-31", time: "2:00 PM", reason: "Vaccination", status: "confirmed" },
-    { id: "3", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "scheduled" },
-    { id: "4", petName: "Charlie", date: "2025-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "completed" },
-    { id: "5", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "cancelled" },
-    { id: "6", petName: "Charlie", date: "2026-01-02", time: "11:30 AM", reason: "Dental cleaning", status: "scheduled" },
-  ];
+  const [summary, setSummary] = useState<{
+    totalPets: number;
+    upcomingAppointments: number;
+    recentAppointments: number;
+    totalSpent: number;
+    totalAppointments: number;
+    cancelledAppointments: number;
+    completedAppointments: number;
+    hasActiveSubscription: boolean | null;
+    subscriptionStatus: string | null;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const initializeDashboard = () => {
-      const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-      if (!accessToken) return router.push("/login");
+    const initializeDashboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const storedUser = typeof window !== "undefined" ? localStorage.getItem("zommeUser") : null;
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        setUser({
-          firstName: "John",
-          stats: { totalPets: 23, upcomingAppointments: 3, pastConsultations: 5 },
+        // Check for tokens
+        const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+        const token = localStorage.getItem("idToken");
+
+        if (!accessToken || !token) {
+          router.push("https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback");
+          return;
+        }
+
+        // Get dashboard data
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/dashboard`, {
+          method: "GET",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('idToken');
+            localStorage.removeItem('accessToken');
+            window.location.href = 'https://us-east-2vpnzrjwhp.auth.us-east-2.amazoncognito.com/login?client_id=mprqfsjl2oapu6iscbb41gk9u&response_type=token&scope=openid+email+profile&redirect_uri=https://zoomievetcare.com/callback';
+            return;
+          }
+          throw new Error(`API request failed with status: ${response.status}`);
+        }
+
+        const dashboardData: DashboardData = await response.json();
+        console.log("Dashboard data:", dashboardData);
+
+        // Set user data
+        if (dashboardData.user) {
+          setUser(dashboardData.user);
+        }
+
+        // Set appointments - fix: check if appointments exists and has items
+        if (dashboardData.appointments && dashboardData.appointments.items) {
+          setAppointments(dashboardData.appointments.items);
+        } else {
+          setAppointments([]);
+        }
+
+        // Set summary data
+        if (dashboardData.summary) {
+          setSummary({
+            totalPets: dashboardData.summary.totalPets || 0,
+            upcomingAppointments: dashboardData.summary.upcomingAppointments || 0,
+            recentAppointments: dashboardData.summary.recentAppointments || 0,
+            totalSpent: 0, // Not in your API response
+            totalAppointments: 0, // Not in your API response
+            cancelledAppointments: 0, // Not in your API response
+            completedAppointments: 0, // Not in your API response
+            hasActiveSubscription: dashboardData.summary.hasActiveSubscription,
+            subscriptionStatus: dashboardData.summary.subscriptionStatus
+          });
+        }
+
+        // Set pets data - fix: check if pets exists and has items
+        if (dashboardData.pets && dashboardData.pets.items) {
+          setPets(dashboardData.pets.items);
+        } else {
+          setPets([]);
+        }
+
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
       }
-
-      setAppointments(demoAppointments);
-      setPets([
-        {
-          id: "1",
-          name: "Buddy",
-          species: "Dog",
-          breed: "Golden Retriever",
-          age: 3,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 70,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-        {
-          id: "2",
-          name: "Mittens",
-          species: "Cat",
-          breed: "Siamese",
-          age: 2,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 50,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-        {
-          id: "3",
-          name: "Charlie",
-          species: "Cat",
-          breed: "Siamese",
-          age: 2,
-          condition: "Medical Condition",
-          description: "Vomitting",
-          weight: 760,
-          photo: "https://i.postimg.cc/SKkMGQy6/Frame-2147226503.png",
-        },
-      ]);
-
-      setLoading(false);
     };
 
     initializeDashboard();
   }, [router]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -123,7 +171,40 @@ export default function DashboardMain() {
     );
   }
 
-  if (!user) return null;
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-xl">⚠️</div>
+          <p className="mt-4 text-gray-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user data, show empty state
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gray-700">No user data found. Please login again.</p>
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -135,20 +216,37 @@ export default function DashboardMain() {
     }
   };
 
+  // Format age display
+  const formatAge = (age: number): string => {
+    if (age < 0) return "Age unknown";
+    if (age === 0) return "Less than 1 year";
+    return `${age} ${age === 1 ? 'yr' : 'yrs'}`;
+  };
+
+  // Format weight display
+  const formatWeight = (weight?: number): string => {
+    if (!weight || weight <= 0) return "Weight unknown";
+    return `${weight} lbs`;
+  };
+
   return (
     <div className="px-4 md:px-8 lg:px-16 py-6 space-y-10">
 
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user.firstName}!</h1>
-        <p className="text-gray-500 text-sm md:text-base">{dayjs().format("dddd, MMMM D, YYYY")}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Welcome back, {user?.name || user?.email}!
+        </h1>
+        <p className="text-gray-500 text-sm md:text-base">
+          {dayjs(user.createdAt).utc().format("dddd, MMMM D, YYYY")}
+        </p>
       </div>
 
       {/* MAIN FLEX */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 ">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
 
         {/* QUICK ACTIONS */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px] ">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-4 w-full lg:w-[280px]">
           <h2 className="text-lg md:text-xl font-semibold mb-2">Quick Actions</h2>
           {[
             { label: "Book Appointment", emoji: "📅", path: "/book" },
@@ -178,22 +276,22 @@ export default function DashboardMain() {
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaPaw className="text-3xl text-blue-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.totalPets}</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.totalPets || 0}</p>
                 <p className="text-gray-500 text-sm">Total Pets</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaCalendarAlt className="text-3xl text-green-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.upcomingAppointments}</p>
-                <p className="text-gray-500 text-sm">Upcoming Appointments</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.recentAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Recent Appointments</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-md">
               <FaClipboardCheck className="text-3xl text-red-500" />
               <div>
-                <p className="text-xl md:text-2xl font-bold">{user.stats.pastConsultations}</p>
-                <p className="text-gray-500 text-sm">Past Consultations</p>
+                <p className="text-xl md:text-2xl font-bold">{summary?.upcomingAppointments || 0}</p>
+                <p className="text-gray-500 text-sm">Upcoming Appointments</p>
               </div>
             </div>
           </div>
@@ -210,22 +308,20 @@ export default function DashboardMain() {
                   key={a.id}
                   className="bg-white p-4 rounded-xl shadow-md flex flex-col justify-between"
                 >
-
-                  {/* TOP: Info + Join Video on Right */}
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-lg font-semibold">{a.petName}</p>
                       <p className="text-gray-500 text-sm line-clamp-1">{a.reason}</p>
-
                       <span
                         className={`inline-block mt-2 px-2 py-1 text-xs font-medium rounded ${getStatusColor(a.status)}`}
                       >
                         {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
                       </span>
                     </div>
-
-                    <button className="text-red-500 font-medium md:text-base cursor-pointer"
-                      onClick={() => alert("Joining video call...")}>
+                    <button
+                      className="text-red-500 font-medium md:text-base cursor-pointer hover:text-red-700"
+                      onClick={() => alert("Joining video call...")}
+                    >
                       Join Video
                     </button>
                   </div>
@@ -234,21 +330,17 @@ export default function DashboardMain() {
                     <p className="text-gray-500 text-sm font-medium">
                       {dayjs(a.date).format("MMM D, YYYY")} • {a.time}
                     </p>
-
-                    <Link
-                      href={`/appointments`}
-                      className="text-blue-500 font-medium md:text-base cursor-pointer"
+                    <button
                       onClick={() => router.push(`/appointments`)}
+                      className="text-blue-500 font-medium md:text-base cursor-pointer hover:text-blue-700"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </div>
-
                 </div>
               ))}
             </div>
           </div>
-
         </div>
       </div>
 
@@ -256,7 +348,6 @@ export default function DashboardMain() {
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 sm:gap-0">
           <h2 className="text-xl font-semibold">Your Pets</h2>
-
           <Link
             href="/pets"
             className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm md:text-base cursor-pointer flex items-center gap-2"
@@ -264,44 +355,47 @@ export default function DashboardMain() {
             <span className="text-lg font-bold">+</span>
             Add New Pet
           </Link>
-
         </div>
+
         {pets.length === 0 ? (
           <p className="text-gray-500">No pets yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {pets.map((p) => (
+            {pets.filter(pet => pet.isActive !== false).map((p) => (
               <div
-                key={p.id}
+                key={p.petId}
                 className="bg-white p-4 md:p-5 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3">
-                  <Image
-                    src={p.photo || "/placeholder-pet.png"}  // Image source with fallback
-                    alt={p.name}
-                    width={64}       // w-16 = 64px
-                    height={64}      // h-16 = 64px
-                    className="rounded-full object-cover"
-                  />
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    {p.profileImageUrl ? (
+                      <img
+                        src={p.profileImageUrl}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-500 text-2xl">🐾</span>
+                    )}
+                  </div>
                   <div>
                     <p className="font-semibold text-lg">{p.name}</p>
                     <p className="text-gray-500 text-sm">{p.species} • {p.breed}</p>
                   </div>
                 </div>
                 <div className="flex justify-between mt-4 text-sm">
-                  <p className="text-green-600 font-medium">Age: {p.age} yrs</p>
-                  <p className="text-green-600 font-medium">Weight: {p.weight} lbs</p>
+                  <p className="text-green-600 font-medium">{formatAge(p.age)}</p>
+                  <p className="text-green-600 font-medium">{formatWeight(p.weight)}</p>
                 </div>
-                <p className="mt-2 text-sm font-medium">{p.condition}</p>
-                <p className="mt-3 text-gray-600 text-sm">
-                  {p.description || "No description available."}
+                <p className="mt-2 text-sm font-medium text-gray-600">
+                  Color: {p.color || "Unknown"}
                 </p>
-                <button
+                {/* <button
                   className="mt-4 w-full text-blue-600 bg-[#F5F9FF] py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm md:text-base cursor-pointer"
-                  onClick={() => router.push(`/pets/${p.id}`)}
+                  onClick={() => router.push(`/pets/${p.petId}`)}
                 >
                   View Details
-                </button>
+                </button> */}
               </div>
             ))}
           </div>
